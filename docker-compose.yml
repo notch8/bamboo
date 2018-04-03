@@ -1,40 +1,40 @@
 version: '2'
 
 services:
-  confluence:
-    image: blacklabelops/confluence
-    container_name: confluence
-    hostname: confluence
+  bamboo:
+    image: notch8/bamboo
+    build: .
+    container_name: bamboo
+    hostname: bamboo
     networks:
-      - confluencenet
+      - bamboonet
     volumes:
-      - confluencedata:/var/atlassian/confluence
+      - bamboodata:/var/atlassian/bamboo
     ports:
-      - '80:8090'
-      - '8091:8091'
+      - '8085:8085'
     environment:
       - 'CATALINA_OPTS= -Xms256m -Xmx1g'
-      - 'CONFLUENCE_PROXY_NAME='
-      - 'CONFLUENCE_PROXY_PORT='
-      - 'CONFLUENCE_PROXY_SCHEME='
-      - 'CONFLUENCE_DELAYED_START='
+      - 'BAMBOO_PROXY_NAME='
+      - 'BAMBOO_PROXY_PORT='
+      - 'BAMBOO_PROXY_SCHEME='
+      - 'BAMBOO_DELAYED_START='
     labels:
-      com.blacklabelops.description: "Atlassian Confluence"
-      com.blacklabelops.service: "confluence"
+      com.blacklabelops.description: "Atlassian Bamboo"
+      com.blacklabelops.service: "bamboo"
 
   postgresql:
     image: blacklabelops/postgres
     container_name: postgres
     hostname: postgres
     networks:
-      - confluencenet
+      - bamboonet
     volumes:
       - postgresqldata:/var/lib/postgresql/data
     environment:
-      - 'POSTGRES_USER=confluencedb'
+      - 'POSTGRES_USER=bamboodb'
       # CHANGE THE PASSWORD!
       - 'POSTGRES_PASSWORD=jellyfish'
-      - 'POSTGRES_DB=confluencedb'
+      - 'POSTGRES_DB=bamboodb'
       - 'POSTGRES_ENCODING=UTF8'
       - 'POSTGRES_COLLATE=C'
       - 'POSTGRES_COLLATE_TYPE=C'
@@ -43,11 +43,11 @@ services:
       com.blacklabelops.service: "postgresql"
 
 volumes:
-  confluencedata:
+  bamboodata:
     external: false
   postgresqldata:
     external: false
 
 networks:
-  confluencenet:
+  bamboonet:
     driver: bridge

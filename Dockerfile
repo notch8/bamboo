@@ -1,7 +1,7 @@
 FROM blacklabelops/java:server-jre.8
-MAINTAINER Steffen Bleul <sbl@blacklabelops.com>
+LABEL maintainer="Rob Kaufman <rob@notch8.com>" maintainer="Steffen Bleul <sbl@blacklabelops.com>"
 
-ARG CONFLUENCE_VERSION=6.8.0
+ARG BAMBOO_VERSION=6.3.3
 # permissions
 ARG CONTAINER_UID=1000
 ARG CONTAINER_GID=1000
@@ -12,13 +12,13 @@ ARG LANG_LANGUAGE=en
 ARG LANG_COUNTRY=US
 
 # Setup useful environment variables
-ENV CONF_HOME=/var/atlassian/confluence \
-    CONF_INSTALL=/opt/atlassian/confluence \
+ENV CONF_HOME=/var/atlassian/bamboo \
+    CONF_INSTALL=/opt/atlassian/bamboo \
     MYSQL_DRIVER_VERSION=5.1.44
 
-# Install Atlassian Confluence
-RUN export CONTAINER_USER=confluence                &&  \
-    export CONTAINER_GROUP=confluence               &&  \
+# Install Atlassian Bamboo
+RUN export CONTAINER_USER=bamboo                &&  \
+    export CONTAINER_GROUP=bamboo               &&  \
     addgroup -g $CONTAINER_GID $CONTAINER_GROUP     &&  \
     adduser -u $CONTAINER_UID                           \
             -G $CONTAINER_GROUP                         \
@@ -44,13 +44,15 @@ RUN export CONTAINER_USER=confluence                &&  \
     fc-cache -f                                     && \
     # Setting Locale
     /usr/glibc-compat/bin/localedef -i ${LANG_LANGUAGE}_${LANG_COUNTRY} -f UTF-8 ${LANG_LANGUAGE}_${LANG_COUNTRY}.UTF-8 && \
-    # Installing Confluence
+    # Installing Bamboo
     mkdir -p ${CONF_HOME} \
-    && chown -R confluence:confluence ${CONF_HOME} \
+    && chown -R bamboo:bamboo ${CONF_HOME} \
     && mkdir -p ${CONF_INSTALL}/conf \
-    && wget -O /tmp/atlassian-confluence-${CONFLUENCE_VERSION}.tar.gz http://www.atlassian.com/software/confluence/downloads/binary/atlassian-confluence-${CONFLUENCE_VERSION}.tar.gz && \
-    tar xzf /tmp/atlassian-confluence-${CONFLUENCE_VERSION}.tar.gz --strip-components=1 -C ${CONF_INSTALL} && \
-    echo "confluence.home=${CONF_HOME}" > ${CONF_INSTALL}/confluence/WEB-INF/classes/confluence-init.properties && \
+    && wget -O /tmp/atlassian-bamboo-${BAMBOO_VERSION}.tar.gz http://www.atlassian.com/software/bamboo/downloads/binary/atlassian-bamboo-${BAMBOO_VERSION}.tar.gz
+
+
+RUN tar xzf /tmp/atlassian-bamboo-${BAMBOO_VERSION}.tar.gz --strip-components=1 -C ${CONF_INSTALL} && \
+    echo "bamboo.home=${CONF_HOME}" > ${CONF_INSTALL}/atlassian-bamboo/WEB-INF/classes/bamboo-init.properties && \
     # Install database drivers
     rm -f                                               \
       ${CONF_INSTALL}/lib/mysql-connector-java*.jar &&  \
@@ -60,7 +62,7 @@ RUN export CONTAINER_USER=confluence                &&  \
       -C /tmp && \
     cp /tmp/mysql-connector-java-${MYSQL_DRIVER_VERSION}/mysql-connector-java-${MYSQL_DRIVER_VERSION}-bin.jar     \
       ${CONF_INSTALL}/lib/mysql-connector-java-${MYSQL_DRIVER_VERSION}-bin.jar                                &&  \
-    chown -R confluence:confluence ${CONF_INSTALL} && \
+    chown -R bamboo:bamboo ${CONF_INSTALL} && \
     # Adding letsencrypt-ca to truststore
     export KEYSTORE=$JAVA_HOME/jre/lib/security/cacerts && \
     wget -P /tmp/ https://letsencrypt.org/certs/letsencryptauthorityx1.der && \
@@ -77,7 +79,7 @@ RUN export CONTAINER_USER=confluence                &&  \
     keytool -trustcacerts -keystore $KEYSTORE -storepass changeit -noprompt -importcert -alias letsencryptauthorityx4 -file /tmp/lets-encrypt-x4-cross-signed.der && \
     # Install atlassian ssl tool
     wget -O /home/${CONTAINER_USER}/SSLPoke.class https://confluence.atlassian.com/kb/files/779355358/779355357/1/1441897666313/SSLPoke.class && \
-    chown -R confluence:confluence /home/${CONTAINER_USER} && \
+    chown -R bamboo:bamboo /home/${CONTAINER_USER} && \
     # Remove obsolete packages and cleanup
     apk del wget && \
     # Clean caches and tmps
@@ -86,21 +88,21 @@ RUN export CONTAINER_USER=confluence                &&  \
     rm -rf /var/log/*
 
 # Image Metadata
-LABEL com.blacklabelops.application.confluence.version=$CONFLUENCE_VERSION \
-      com.blacklabelops.application.confluence.setting.language=$LANG_LANGUAGE \
-      com.blacklabelops.application.confluence.setting.country=$LANG_COUNTRY \
-      com.blacklabelops.application.confluence.userid=$CONTAINER_UID \
-      com.blacklabelops.application.confluence.groupid=$CONTAINER_GID \
+LABEL com.blacklabelops.application.bamboo.version=$BAMBOO_VERSION \
+      com.blacklabelops.application.bamboo.setting.language=$LANG_LANGUAGE \
+      com.blacklabelops.application.bamboo.setting.country=$LANG_COUNTRY \
+      com.blacklabelops.application.bamboo.userid=$CONTAINER_UID \
+      com.blacklabelops.application.bamboo.groupid=$CONTAINER_GID \
       com.blacklabelops.application.version.jdbc-mysql=$MYSQL_DRIVER_VERSION \
-      com.blacklabelops.image.builddate.confluence=${BUILD_DATE}
+      com.blacklabelops.image.builddate.bamboo=${BUILD_DATE}
 
 # Expose default HTTP connector port.
-EXPOSE 8090 8091
+EXPOSE 8085 8007
 
-USER confluence
-VOLUME ["/var/atlassian/confluence"]
-# Set the default working directory as the Confluence home directory.
+USER bamboo
+VOLUME ["/var/atlassian/bamboo"]
+# Set the default working directory as the Bamboo home directory.
 WORKDIR ${CONF_HOME}
-COPY docker-entrypoint.sh /home/confluence/docker-entrypoint.sh
-ENTRYPOINT ["/sbin/tini","--","/home/confluence/docker-entrypoint.sh"]
-CMD ["confluence"]
+COPY docker-entrypoint.sh /home/bamboo/docker-entrypoint.sh
+ENTRYPOINT ["/sbin/tini","--","/home/bamboo/docker-entrypoint.sh"]
+CMD ["bamboo"]
