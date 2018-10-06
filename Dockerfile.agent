@@ -66,37 +66,12 @@ RUN export CONTAINER_USER=bamboo                &&  \
     # Installing Bamboo
     mkdir -p ${CONF_HOME} \
     && chown -R bamboo:bamboo ${CONF_HOME} \
-    && mkdir -p ${CONF_INSTALL}/conf \
-    && wget -O /tmp/atlassian-bamboo-${BAMBOO_VERSION}.tar.gz http://www.atlassian.com/software/bamboo/downloads/binary/atlassian-bamboo-${BAMBOO_VERSION}.tar.gz && \
-    tar xzf /tmp/atlassian-bamboo-${BAMBOO_VERSION}.tar.gz --strip-components=1 -C ${CONF_INSTALL} && \
-    echo "bamboo.home=${CONF_HOME}" > ${CONF_INSTALL}/atlassian-bamboo/WEB-INF/classes/bamboo-init.properties && \
-    # Install database drivers
-    rm -f                                               \
-      ${CONF_INSTALL}/lib/mysql-connector-java*.jar &&  \
-    wget -O /tmp/mysql-connector-java-${MYSQL_DRIVER_VERSION}.tar.gz                                              \
-      http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MYSQL_DRIVER_VERSION}.tar.gz && \
-    tar xzf /tmp/mysql-connector-java-${MYSQL_DRIVER_VERSION}.tar.gz                                              \
-      -C /tmp && \
-    cp /tmp/mysql-connector-java-${MYSQL_DRIVER_VERSION}/mysql-connector-java-${MYSQL_DRIVER_VERSION}-bin.jar     \
-      ${CONF_INSTALL}/lib/mysql-connector-java-${MYSQL_DRIVER_VERSION}-bin.jar                                &&  \
-    chown -R bamboo:bamboo ${CONF_INSTALL} && \
-    # Adding letsencrypt-ca to truststore
-    export KEYSTORE=$JAVA_HOME/jre/lib/security/cacerts && \
-    wget -P /tmp/ https://letsencrypt.org/certs/letsencryptauthorityx1.der && \
-    wget -P /tmp/ https://letsencrypt.org/certs/letsencryptauthorityx2.der && \
-    wget -P /tmp/ https://letsencrypt.org/certs/lets-encrypt-x1-cross-signed.der && \
-    wget -P /tmp/ https://letsencrypt.org/certs/lets-encrypt-x2-cross-signed.der && \
-    wget -P /tmp/ https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.der && \
-    wget -P /tmp/ https://letsencrypt.org/certs/lets-encrypt-x4-cross-signed.der && \
-    keytool -trustcacerts -keystore $KEYSTORE -storepass changeit -noprompt -importcert -alias isrgrootx1 -file /tmp/letsencryptauthorityx1.der && \
-    keytool -trustcacerts -keystore $KEYSTORE -storepass changeit -noprompt -importcert -alias isrgrootx2 -file /tmp/letsencryptauthorityx2.der && \
-    keytool -trustcacerts -keystore $KEYSTORE -storepass changeit -noprompt -importcert -alias letsencryptauthorityx1 -file /tmp/lets-encrypt-x1-cross-signed.der && \
-    keytool -trustcacerts -keystore $KEYSTORE -storepass changeit -noprompt -importcert -alias letsencryptauthorityx2 -file /tmp/lets-encrypt-x2-cross-signed.der && \
-    keytool -trustcacerts -keystore $KEYSTORE -storepass changeit -noprompt -importcert -alias letsencryptauthorityx3 -file /tmp/lets-encrypt-x3-cross-signed.der && \
-    keytool -trustcacerts -keystore $KEYSTORE -storepass changeit -noprompt -importcert -alias letsencryptauthorityx4 -file /tmp/lets-encrypt-x4-cross-signed.der && \
-    # Install atlassian ssl tool
-    wget -O /home/${CONTAINER_USER}/SSLPoke.class https://confluence.atlassian.com/kb/files/779355358/779355357/1/1441897666313/SSLPoke.class && \
     chown -R bamboo:bamboo /home/${CONTAINER_USER}
+
+COPY bamboo-agent.sh /
+
+CMD ["/bamboo-agent.sh"]
+
 RUN mkdir -p /usr/share/maven /usr/share/maven/ref && \
     curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
     tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 && \
@@ -124,13 +99,9 @@ LABEL com.blacklabelops.application.bamboo.version=$BAMBOO_VERSION \
 COPY jdk-8u101-linux-x64.tar.gz /var/lib/jdk-8u101-linux-x64.tar.gz
 RUN cd /var/lib && tar zxfv jdk-8u101-linux-x64.tar.gz && ln -s /var/lib/jdk-8u101-linux-x64/bin/java /usr/local/bin/java
 
-# Expose default HTTP connector port.
-EXPOSE 8085 8007
-
 USER bamboo
-VOLUME ["/var/atlassian/bamboo"]
-# Set the default working directory as the Bamboo home directory.
-WORKDIR ${CONF_HOME}
-COPY docker-entrypoint.sh /home/bamboo/docker-entrypoint.sh
-ENTRYPOINT ["/sbin/tini","--","/home/bamboo/docker-entrypoint.sh"]
-CMD ["bamboo"]
+
+COPY bamboo-agent.sh /
+
+CMD ["/bamboo-agent.sh"]
+

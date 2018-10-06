@@ -10,8 +10,8 @@ set -o errexit
 
 [[ ${DEBUG} == true ]] && set -x
 
-SERAPH_CONFIG_FILE="/opt/atlassian/bamboo/bamboo/WEB-INF/classes/seraph-config.xml"
-CROWD_PROPERTIES_FILE="/opt/atlassian/bamboo/bamboo/WEB-INF/classes/crowd.properties"
+SERAPH_CONFIG_FILE="/opt/atlassian/bamboo/atlassian-bamboo/WEB-INF/classes/seraph-config.xml"
+CROWD_PROPERTIES_FILE="/opt/atlassian/bamboo/atlassian-bamboo/WEB-INF/classes/crowd.properties"
 
 function updateProperties() {
   local propertyfile=$1
@@ -26,7 +26,7 @@ function updateProperties() {
 #
 function enableCrowdSSO() {
   xmlstarlet ed -P -S -L --delete "//authenticator" $SERAPH_CONFIG_FILE
-  xmlstarlet ed -P -S -L -s "//security-config" --type elem -n authenticator -i "//authenticator[not(@class)]" -t attr -n class -v "com.atlassian.bamboo.user.BambooCrowdSSOAuthenticator" $SERAPH_CONFIG_FILE
+  xmlstarlet ed -P -S -L -s "//security-config" --type elem -n authenticator -i "//authenticator[not(@class)]" -t attr -n class -v "com.atlassian.crowd.integration.seraph.v25.BambooAuthenticator" $SERAPH_CONFIG_FILE
   if [ -f "${CROWD_PROPERTIES_FILE}" ]; then
     rm -f ${CROWD_PROPERTIES_FILE}
     touch ${CROWD_PROPERTIES_FILE}

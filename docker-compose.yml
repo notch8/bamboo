@@ -2,7 +2,15 @@ version: '2'
 
 services:
   bamboo:
-    image: notch8/bamboo
+    image: registry.gitlab.com/notch8/bbfops/bamboo-agent:latest
+    build: .
+    environment:
+      - 'CATALINA_OPTS= -Xms256m -Xmx1g'
+      - 'BAMBOO_SERVER=http://bamboo:8085'
+
+
+  bamboo:
+    image: registry.gitlab.com/notch8/bbfops/bamboo:latest
     build: .
     container_name: bamboo
     hostname: bamboo
