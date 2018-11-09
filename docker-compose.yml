@@ -1,9 +1,11 @@
 version: '2'
 
 services:
-  bamboo:
+  bamboo-agent:
     image: registry.gitlab.com/notch8/bbfops/bamboo-agent:latest
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
     environment:
       - 'CATALINA_OPTS= -Xms256m -Xmx1g'
       - 'BAMBOO_SERVER=http://bamboo:8085'

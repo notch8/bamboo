@@ -57,8 +57,9 @@ session.lastvalidation=session.lastvalidation
 # Enable bamboo authenticator java class in image config file
 #
 function enableBambooAuth() {
-  xmlstarlet ed -P -S -L --delete "//authenticator" $SERAPH_CONFIG_FILE
-  xmlstarlet ed -P -S -L -s "//security-config" --type elem -n authenticator -i "//authenticator[not(@class)]" -t attr -n class -v "com.atlassian.bamboo.user.BambooAuthenticator" $SERAPH_CONFIG_FILE
+#  xmlstarlet ed -P -S -L --delete "//authenticator" $SERAPH_CONFIG_FILE
+#  xmlstarlet ed -P -S -L -s "//security-config" --type elem -n authenticator -i "//authenticator[not(@class)]" -t attr -n class -v "com.atlassian.bamboo.user.BambooAuthenticator" $SERAPH_CONFIG_FILE
+  true
 }
 
 #
@@ -258,7 +259,6 @@ if [ -n "${BAMBOO_CROWD_SSO}" ]; then
 fi
 
 if [ "$1" = 'bamboo' ]; then
-  source /usr/bin/dockerwait
   exec ${CONF_INSTALL}/bin/start-bamboo.sh -fg
 else
   exec "$@"
