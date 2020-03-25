@@ -22,11 +22,14 @@ You may also like:
 # Make It Short
 
 ~~~~
+Download jdk-8u101-linux-x64.tar.gz
+
 $ docker run -d -p 80:8085 --name bamboo notch8/bamboo
 ~~~~
 
 # Setup
 
+1. Download jdk-8u101-linux-x64.tar.gz
 1. Start the database container
 2. Start Bamboo
 3. Setup Bamboo
