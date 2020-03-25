@@ -2,7 +2,7 @@ version: '2'
 
 services:
   bamboo-agent:
-    image: registry.gitlab.com/notch8/bbfops/bamboo-agent:latest
+    image: registry.gitlab.com/notch8/bbfops/bamboo-agent:#{TAG}
     build:
       context: .
       dockerfile: Dockerfile.agent
@@ -12,7 +12,7 @@ services:
 
 
   bamboo:
-    image: registry.gitlab.com/notch8/bbfops/bamboo:latest
+    image: registry.gitlab.com/notch8/bbfops/bamboo:${TAG}
     build: .
     container_name: bamboo
     hostname: bamboo
